@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000
 
 app.use(cors())
 app.use(express.json())
-const uri = "mongodb://SmartDB:SHMoSLaApxtIqlja@ac-eqifd2k-shard-00-00.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-01.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-02.tbmejyb.mongodb.net:27017/?ssl=true&replicaSet=atlas-bvjx8p-shard-0&authSource=admin&appName=Cluster0";
+const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-eqifd2k-shard-00-00.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-01.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-02.tbmejyb.mongodb.net:27017/?ssl=true&replicaSet=atlas-bvjx8p-shard-0&authSource=admin&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -28,6 +29,7 @@ async function run() {
         const productCollection = db.collection("productCollection")
         const userCellection = db.collection('userCollection')
         const bidCollection = db.collection("bidCollection")
+        const newProductsColl = db.collection("newProducts")
 
         // ------------------  this is product api ------------------
         app.get("/recentproduct", async (req, res) => {
@@ -58,7 +60,7 @@ async function run() {
 
         app.get("/productdetails/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { _id: id }
+            const query = { _id: id}
             const result = await productCollection.findOne(query)
             res.send(result)
         })
@@ -66,7 +68,7 @@ async function run() {
 
         app.post("/product", async (req, res) => {
             const product = req.body;
-            const result = await productCollection.insertOne(product)
+            const result = await newProductsColl.insertOne(product)
             res.send(result)
         })
 
@@ -109,7 +111,8 @@ async function run() {
         // --------------- Bids ---------------
 
         app.get("/bids/:email", async(req, res) =>{
-            const query = {}
+            const query = req.params.email
+            // const query = {}
             if(query.email){
                 query.buyer_email = email
             }
