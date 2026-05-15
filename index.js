@@ -60,11 +60,20 @@ async function run() {
 
         app.get("/productdetails/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { _id: id}
+            const query = { _id: id }
             const result = await productCollection.findOne(query)
             res.send(result)
         })
-
+        app.get("/myproducts/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = {
+                seller_email: email
+            }
+            console.log(query)
+            const cursor = newProductsColl.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
         app.post("/product", async (req, res) => {
             const product = req.body;
@@ -93,6 +102,13 @@ async function run() {
             res.send(result)
         })
 
+        app.delete("/myproducts/:id", async(req, res) =>{
+            const id = req.params.id;
+            const query = {_id : new ObjectId(id)}
+            const result = await newProductsColl.deleteOne(query)
+            res.send(result)
+        })
+
         app.post("/user", async (req, res) => {
             const user = req.body
             const query = { email: user.email, name: user.name }
@@ -110,13 +126,12 @@ async function run() {
 
         // --------------- Bids ---------------
 
-        app.get("/bids/:email", async(req, res) =>{
-            const query = req.params.email
-            // const query = {}
-            if(query.email){
-                query.buyer_email = email
+        app.get("/bids/:email", async (req, res) => {
+            const email = req.params.email
+            const query = {
+                buyer_email: email
             }
-            const cursor = bidCollection.find(query).sort({bid_price: 1})
+            const cursor = bidCollection.find(query).sort({ bid_price: 1 })
             const result = await cursor.toArray()
             res.send(result)
         })
@@ -135,9 +150,9 @@ async function run() {
             res.send(result)
         })
 
-        app.delete("/bids/:id", async(req, res) =>{
+        app.delete("/bids/:id", async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await bidCollection.deleteOne(query)
             res.send(result)
         })
