@@ -4,6 +4,7 @@ require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const admin = require("firebase-admin");
+const jwt = require("jsonwebtoken")
 const port = process.env.PORT || 5000
 
 
@@ -17,27 +18,40 @@ admin.initializeApp({
 app.use(cors())
 app.use(express.json())
 
-const verifyUserToken = async (req, res, next) => {
-    if (!req.headers.authorization) {
-        return res.status(401).send({ message: "unauthorized access" })
-    }
-    const token = req.headers.authorization.split(" ")[1]
-    if (!token) {
-        return res.status(401).send({ message: "unathorized access" })
-    }
+// const verifyUserToken = async (req, res, next) => {
+//     if (!req.headers.authorization) {
+//         return res.status(401).send({ message: "unauthorized access" })
+//     }
+//     const token = req.headers.authorization.split(" ")[1]
+//     if (!token) {
+//         return res.status(401).send({ message: "unathorized access" })
+//     }
 
-    try {
-        const userInfo = await admin.auth().verifyIdToken(token)
-        req.token_email = userInfo.email
-        // console.log("user info:", userInfo)
-        next()
+//     try {
+//         const userInfo = await admin.auth().verifyIdToken(token)
+//         req.token_email = userInfo.email
+//         // console.log("user info:", userInfo)
+//         next()
+//     }
+//     catch {
+//         console.log("invalid user")
+//         return res.status(401).send({ message: "unathorized access" })
+//     }
+// }
+
+const verifyJwtToken =(req, res, next) =>{
+    const authorization = req.headers.authorization
+    // console.log(authorization)
+    if(!authorization){
+        return res.status(403).send({message: "unauthorized access"})
     }
-    catch {
-        console.log("invalid user")
-        return res.status(401).send({ message: "unathorized access" })
+    const token = authorization.split(' ')[1]
+    if(!token){
+        return res.status(403).send({message: 'unauthorized access'})
     }
+    next()
 }
-
+//require("crypto").randomBytes(64).toString('hex)
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-eqifd2k-shard-00-00.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-01.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-02.tbmejyb.mongodb.net:27017/?ssl=true&replicaSet=atlas-bvjx8p-shard-0&authSource=admin&appName=Cluster0`;
 
@@ -62,6 +76,13 @@ async function run() {
         const userCellection = db.collection('userCollection')
         const bidCollection = db.collection("bidCollection")
         const newProductsColl = db.collection("newProducts")
+
+        app.post("/getToken", (req, res) =>{
+            const loggedUser = req.body;
+            const token = jwt.sign(loggedUser, process.env.JWT_SECRET,{expiresIn: "1h"})
+            res.send({token: token})
+        })
+
 
         // ------------------  this is product api ------------------
         app.get("/recentproduct", async (req, res) => {
@@ -96,7 +117,7 @@ async function run() {
             const result = await productCollection.findOne(query)
             res.send(result)
         })
-        app.get("/myproducts", verifyUserToken, async (req, res) => {
+        app.get("/myproducts", async (req, res) => {
             const email = req.query.email;
             const query = {}
             if (email) {
@@ -144,16 +165,18 @@ async function run() {
             res.send(result)
         })
 
+        // ------------------- User API ---------------
+
         app.post("/user", async (req, res) => {
             const user = req.body
             const query = { email: user.email, name: user.name }
-            // const existingUser = await userCellection.findOne(query)
-            // if (existingUser) {
-            //     return res.send({
-            //         message: "user already exist"
-            //     }
-            //     )
-            // }
+            const existingUser = await userCellection.findOne(query)
+            if (existingUser) {
+                return res.send({
+                    message: "user already exist"
+                }
+                )
+            }
             const result = await userCellection.insertOne(query)
             res.send(result)
         })
@@ -161,13 +184,13 @@ async function run() {
 
         // --------------- Bids ---------------
 
-        app.get("/bids", verifyUserToken, async (req, res) => {
+        app.get("/bids", verifyJwtToken, async (req, res) => {
             const email = req.query.email
             const query = {}
             if (email) {
-                if (email !== req.token_email) {
-                    return res.status(403).send({ message: "forbidden access" })
-                }
+                // if (email !== req.token_email) {
+                //     return res.status(403).send({ message: "forbidden access" })
+                // }
                 query.buyer_email = email
 
             }
