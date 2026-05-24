@@ -239,6 +239,6 @@ async function run() {
 run().catch(console.dir);
 
 
-app.listen(port, () => {
-    console.log(`the port is running on: ${port}`)
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Server is running")
 })
