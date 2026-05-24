@@ -3,16 +3,16 @@ const cors = require('cors');
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
-const admin = require("firebase-admin");
+// const admin = require("firebase-admin");
 const jwt = require("jsonwebtoken")
 const port = process.env.PORT || 5000
 
 
 const serviceAccount = require("./smart-deals-firebase-adminsdk.json");
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount)
+// });
 
 
 app.use(cors())
@@ -49,7 +49,13 @@ const verifyJwtToken =(req, res, next) =>{
     if(!token){
         return res.status(403).send({message: 'unauthorized access'})
     }
-    next()
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) =>{
+        if(err){
+            return res.status(401).send({message: "forbidden access"})
+        }
+        req.token_email = decoded.email
+        next()
+    })
 }
 //require("crypto").randomBytes(64).toString('hex)
 
@@ -117,14 +123,14 @@ async function run() {
             const result = await productCollection.findOne(query)
             res.send(result)
         })
-        app.get("/myproducts", async (req, res) => {
+        app.get("/myproducts", verifyJwtToken, async (req, res) => {
             const email = req.query.email;
             const query = {}
             if (email) {
-                if (email !== req.token_email) {
-                    return res.status(403).send({ message: "forbidden access" })
-                }
                 query.seller_email = email
+            }
+            if (email !== req.token_email) {
+                return res.status(403).send({ message: "forbidden access" })
             }
             const cursor = newProductsColl.find(query)
             const result = await cursor.toArray()
@@ -188,18 +194,17 @@ async function run() {
             const email = req.query.email
             const query = {}
             if (email) {
-                // if (email !== req.token_email) {
-                //     return res.status(403).send({ message: "forbidden access" })
-                // }
                 query.buyer_email = email
-
             }
+            if (email !== req.token_email) {
+                    return res.status(403).send({ message: "forbidden access" })
+                }
             const cursor = bidCollection.find(query).sort({ bid_price: 1 })
             const result = await cursor.toArray()
             res.send(result)
         })
 
-        app.get("/product/bids/:productId", verifyUserToken, async (req, res) => {
+        app.get("/product/bids/:productId", verifyJwtToken, async (req, res) => {
             const id = req.params.productId
             const query = { productId: id }
             const cursor = bidCollection.find(query)
