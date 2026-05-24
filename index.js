@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken")
 const port = process.env.PORT || 5000
 
 
-const serviceAccount = require("./smart-deals-firebase-adminsdk.json");
+// const serviceAccount = require("./smart-deals-firebase-adminsdk.json");
 
 // admin.initializeApp({
 //     credential: admin.credential.cert(serviceAccount)
@@ -57,7 +57,6 @@ const verifyJwtToken =(req, res, next) =>{
         next()
     })
 }
-//require("crypto").randomBytes(64).toString('hex)
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-eqifd2k-shard-00-00.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-01.tbmejyb.mongodb.net:27017,ac-eqifd2k-shard-00-02.tbmejyb.mongodb.net:27017/?ssl=true&replicaSet=atlas-bvjx8p-shard-0&authSource=admin&appName=Cluster0`;
 
