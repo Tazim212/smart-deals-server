@@ -105,16 +105,18 @@ async function run() {
         })
 
         app.get("/allproducts", async (req, res) => {
-            //     const search = req.query.search || ""
-            //     const query = {
-            //     title: {
-            //         $regex: search,
-            //         // $options: "i"
-            //     }
-            // }
-            const result = await productCollection.find().toArray();
+                const search = req.query.search || ""
+                const query = {
+                title: {
+                    $regex: search,
+                    $options: "i"
+                }
+            }
+            const cursor = productCollection.find(query);
+            const result = await cursor.toArray()
             res.send(result)
         })
+        
 
         app.get("/productdetails/:id", async (req, res) => {
             const id = req.params.id;
