@@ -138,13 +138,20 @@ async function run() {
             res.send(result)
         })
 
-        app.post("/product", async (req, res) => {
+        app.get("/myproducts/:id", async(req, res) =>{
+            const id = req.params.id
+            const query = {_id: new ObjectId(id)}
+            const result = await newProductsColl.findOne(query)
+            res.send(result)
+        })
+        app.post("/createproducts", async (req, res) => {
             const product = req.body;
             const result = await newProductsColl.insertOne(product)
+            console.log(result)
             res.send(result)
         })
 
-        app.patch("/product/:id", async (req, res) => {
+        app.patch("/updateproducts/:id", async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const cursor = req.body
