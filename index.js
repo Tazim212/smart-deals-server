@@ -137,17 +137,16 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
-
-        app.get("/myproducts/:id", async(req, res) =>{
-            const id = req.params.id
-            const query = {_id: new ObjectId(id)}
-            const result = await newProductsColl.findOne(query)
-            res.send(result)
-        })
         app.post("/createproducts", async (req, res) => {
             const product = req.body;
             const result = await newProductsColl.insertOne(product)
-            console.log(result)
+            res.send(result)
+        })
+        
+        app.get("/updateproducts/:id", async(req, res) =>{
+            const id = req.params.id
+            const query = {_id: new ObjectId(id)}
+            const result = await newProductsColl.findOne(query)
             res.send(result)
         })
 
@@ -156,12 +155,9 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const cursor = req.body
             const update = {
-                $set: {
-                    name: cursor.name,
-                    price: cursor.price
-                }
+                $set: cursor
             }
-            const result = await productCollection.updateOne(query, update)
+            const result = await newProductsColl.updateOne(query, update)
             res.send(result)
         })
 
