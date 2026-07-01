@@ -93,7 +93,7 @@ async function run() {
         app.get("/recentproduct", async (req, res) => {
             // const projects = {title: 1, price_max: 1}
             // const query = productCollection.find().sort({ price_max: -1 }).limit(3).skip(2).project(projects)
-            const query = productCollection.find().sort({ created_at: -1 }).limit(6)
+            const query = productCollection.find().sort({ created_at: -1 }).skip(3).limit(3)
             // const email = req.query.email
             // const cursor = {}
             // if(email){
